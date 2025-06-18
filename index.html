@@ -1,0 +1,2951 @@
+<html lang="es">
+      <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>GestorDeClientes</title>
+          
+          <!-- Meta tags para redes sociales -->
+          <meta property="og:image" content="https://4tsix0yujj.ufs.sh/f/2vMRHqOYUHc0K5prXUEjR7oilQcqGuVyEA8Sm1pf4v95nLIB" />
+          <meta property="og:image:alt" content="Imagen del proyecto" />
+          <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:image" content="https://4tsix0yujj.ufs.sh/f/2vMRHqOYUHc0K5prXUEjR7oilQcqGuVyEA8Sm1pf4v95nLIB" />
+
+          <!-- TailwindCSS CDN -->
+          <script src="https://cdn.tailwindcss.com"></script>
+
+          <!-- React & Babel -->
+          <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+          <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+          <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+        </head>
+        <body>
+          <div id="root"></div>
+
+          <script type="text/babel">
+const { useState, useEffect, useRef, useMemo, createContext, useContext, StrictMode } = React;
+            const { createRoot } = ReactDOM;
+
+            // /utils/storage.js
+const getStorage = (key, defaultValue) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.error("Error getting from localStorage", error);
+    return defaultValue;
+  }
+};
+
+const setStorage = (key, value) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (error) {
+    console.error("Error setting to localStorage", error);
+  }
+};
+
+const removeStorage = (key) => {
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error("Error removing from localStorage", error);
+  }
+};
+
+// /components/RegisterForm.js
+const RegisterForm = ({ onRegister, onNavigateToLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [role, setRole] = useState('employee');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (username && password) {
+      onRegister({ username, password, role });
+    } else {
+      setError('Por favor, ingresa un usuario y contraseña.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <form onSubmit={handleSubmit} className="p-8 bg-white rounded-lg shadow-md w-full max-w-sm">
+        <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">Registrarse</h2>
+        <input
+          type="text"
+          placeholder="Usuario"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+          required
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full px-4 py-2 mb-6 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+          required
+        />
+        <div className="mb-4">
+          <label htmlFor="role-select" className="block text-gray-700 text-sm font-bold mb-2">
+            Tipo de cuenta:
+          </label>
+          <select
+            id="role-select"
+            value={role}
+            onChange={(e) => setRole(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+          >
+            <option value="employee">Empleado</option>
+            <option value="admin">Administrador</option>
+          </select>
+        </div>
+        {error && <p className="text-red-500 text-center mb-4">{error}</p>}
+        <button
+          type="submit"
+          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+        >
+          Registrarme
+        </button>
+        <div className="mt-4 text-center">
+          <button
+            type="button"
+            onClick={onNavigateToLogin}
+            className="text-blue-600 hover:underline text-sm"
+          >
+            ¿Ya tienes cuenta? Inicia Sesión
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+// /components/LoginForm.js
+const LoginForm = ({ onLogin }) => {
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const foundUser = users.find(
+      (user) => user.username === username && user.password === password
+    );
+
+    if (foundUser) {
+      onLogin(foundUser);
+    } else {
+      setError('Usuario o contraseña incorrectos. ¡Intenta de nuevo, campeón!');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
+      <div className="bg-white bg-opacity-10 backdrop-filter backdrop-blur-lg border border-gray-700 rounded-2xl shadow-2xl p-8 w-full max-w-md transform transition-all duration-500 scale-95 hover:scale-100">
+        <h2 className="text-4xl font-extrabold mb-8 text-center text-white drop-shadow-lg">
+          Bienvenido
+        </h2>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <input
+            type="text"
+            placeholder="Usuario"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+            className="w-full px-5 py-3 bg-gray-800 bg-opacity-50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full px-5 py-3 bg-gray-800 bg-opacity-50 border border-gray-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+            required
+          />
+          {error && <p className="text-red-400 text-center text-sm">{error}</p>}
+          <button
+            type="submit"
+            className="w-full bg-blue-600 text-white py-3 rounded-xl font-semibold text-lg hover:bg-blue-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+          >
+            Entrar
+          </button>
+        </form>
+        <div className="mt-8 text-center text-gray-300">
+          <p className="text-sm">Usa 'admin' / 'admin123' o 'empleado' / 'empleado123'</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// /mock/users.js
+const users = [
+  { username: 'admin', password: 'admin123', role: 'admin', name: 'Admin', lastName: 'Principal', phone: '5512345678', email: 'admin@example.com' },
+  { username: 'admin2', password: 'admin2pass', role: 'admin', name: 'Admin', lastName: 'Secundario', phone: '5511223344', email: 'admin2@example.com' },
+  { username: 'empleado', password: 'empleado123', role: 'cashier', name: 'Empleado', lastName: 'Caja', phone: '5587654321', email: 'empleado@example.com' },
+];
+
+// /components/ClientList.js
+const ClientList = ({ clients, onPay, onAbono, onEdit, onUpdateBalance, onDelete, onRemovePayment, onShowReceipt, userRole }) => {
+  const [selectedPlace, setSelectedPlace] = useState('Todos');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('Todos');
+
+  const uniquePlaces = ['Todos', ...new Set(clients.map(client => client.place).filter(Boolean))];
+  const uniqueStatuses = ['Todos', 'Al día', 'Pendiente', 'Suspendido'];
+
+  const searchedClients = clients.filter(client =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.cedula.includes(searchTerm) ||
+    client.phone.includes(searchTerm) ||
+    client.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.place.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.comment.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredByPlaceClients = selectedPlace === 'Todos'
+    ? searchedClients
+    : searchedClients.filter(client => client.place === selectedPlace);
+
+  const finalFilteredClients = selectedStatus === 'Todos'
+    ? filteredByPlaceClients
+    : filteredByPlaceClients.filter(client => client.status === selectedStatus);
+
+  const clientsByPlace = finalFilteredClients.reduce((acc, client) => {
+    const place = client.place || 'Sin lugar';
+    if (!acc[place]) {
+      acc[place] = [];
+    }
+    acc[place].push(client);
+    return acc;
+  }, {});
+
+  return (
+    <div className="p-6">
+      <div className="mb-6 flex flex-col md:flex-row md:items-end space-y-4 md:space-y-0 md:space-x-4">
+        <div className="flex-grow">
+          <label htmlFor="search-input" className="block text-lg font-medium text-gray-700 mb-2">
+            Búsqueda:
+          </label>
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Buscar cliente..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+          />
+        </div>
+        <div>
+          <label htmlFor="place-filter" className="block text-lg font-medium text-gray-700 mb-2">
+            Filtrar por Lugar:
+          </label>
+          <select
+            id="place-filter"
+            value={selectedPlace}
+            onChange={(e) => setSelectedPlace(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+          >
+            {uniquePlaces.map((place) => (
+              <option key={place} value={place}>
+                {place}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label htmlFor="status-filter" className="block text-lg font-medium text-gray-700 mb-2">
+            Filtrar por Estado:
+          </label>
+          <select
+            id="status-filter"
+            value={selectedStatus}
+            onChange={(e) => setSelectedStatus(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+          >
+            {uniqueStatuses.map((status) => (
+              <option key={status} value={status}>
+                {status}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {Object.keys(clientsByPlace).length === 0 && (
+        <p className="text-center text-gray-500 text-xl mt-8">No hay clientes para mostrar con estos filtros.</p>
+      )}
+
+      {Object.keys(clientsByPlace).map((place) => (
+        <div key={place} className="mb-8">
+          <h2 className="text-2xl font-bold mb-4 text-gray-800 border-b-2 border-gray-300 pb-2">
+            Lugar: {place}
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {clientsByPlace[place].map((client) => (
+              <ClientCard
+                key={client.id}
+                client={client}
+                onPay={onPay}
+                onAbono={onAbono}
+                onEdit={userRole === 'admin' ? onEdit : null}
+                onUpdateBalance={userRole === 'admin' ? onUpdateBalance : null}
+                onDelete={userRole === 'admin' ? onDelete : null}
+                onRemovePayment={userRole === 'admin' ? onRemovePayment : null} // Pasar la función
+                onShowReceipt={onShowReceipt} // Pasar la función
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// /components/WelcomeScreen.js
+const WelcomeScreen = ({ onEnter }) => {
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 text-white p-4">
+      <h1 className="text-6xl font-extrabold mb-6 drop-shadow-lg animate-pulse">
+        Bienvenido a CONEXION_PLUX
+      </h1>
+      <p className="text-xl text-center mb-10 max-w-md">
+        Tu solución integral para la gestión de clientes y pagos de servicios de internet.
+      </p>
+      <button
+        onClick={onEnter}
+        className="bg-white text-blue-700 px-8 py-4 rounded-full text-2xl font-bold shadow-lg hover:bg-gray-100 hover:scale-105 transition-all duration-300 transform"
+      >
+        Ingresar
+      </button>
+    </div>
+  );
+};
+
+// /components/SettingsPage.js
+const SettingsPage = ({ currentUser, onUpdateUser, onCreateEmployee, onUpdateEmployee, onDeleteEmployee, onRegisterAdmin, onUpdatePaymentDays }) => {
+  const [profileData, setProfileData] = useState({
+    name: currentUser.name || '',
+    lastName: currentUser.lastName || '',
+    phone: currentUser.phone || '',
+    email: currentUser.email || '',
+  });
+  const [employeeData, setEmployeeData] = useState({
+    name: '',
+    lastName: '',
+    password: '',
+    phone: '',
+    email: '',
+    permissions: { // Permisos por defecto para empleado de caja
+      canViewClients: true,
+      canAddClients: false,
+      canEditClients: false,
+      canDeleteClients: false,
+      canUpdateBalance: false,
+      canRemovePayments: false,
+      canExportImport: false,
+      canBillMonthly: false,
+      canMakePayments: true,
+    },
+  });
+  const [adminRegisterData, setAdminRegisterData] = useState({
+    name: '',
+    lastName: '',
+    password: '',
+    phone: '',
+    email: '',
+  });
+  const [paymentDaysData, setPaymentDaysData] = useState(() => {
+    const storedPaymentDays = JSON.parse(localStorage.getItem('paymentDays'));
+    return storedPaymentDays || {
+      nextPaymentDueDay: 5,
+      suspensionDay: 10,
+      billingDay: 1,
+    };
+  });
+  const [monthlyFeeOptions, setMonthlyFeeOptions] = useState(() => {
+    const storedOptions = JSON.parse(localStorage.getItem('monthlyFeeOptions'));
+    return storedOptions || {
+      A: 60000, B: 70000, C: 80000, D: 90000, E: 100000,
+      F: 110000, G: 120000, H: 130000, I: 140000, J: 150000,
+    };
+  });
+
+  const [profileMessage, setProfileMessage] = useState('');
+  const [employeeMessage, setEmployeeMessage] = useState('');
+  const [adminRegisterMessage, setAdminRegisterMessage] = useState('');
+  const [paymentDaysMessage, setPaymentDaysMessage] = useState('');
+  const [feeOptionsMessage, setFeeOptionsMessage] = useState('');
+  const [editingEmployee, setEditingEmployee] = useState(null);
+  const [editingAdmin, setEditingAdmin] = useState(null);
+  const [adminLoginPassword, setAdminLoginPassword] = useState('');
+  const [adminLoginError, setAdminLoginError] = useState('');
+  const [hasAdminAccess, setHasAdminAccess] = useState(false);
+
+  useState(() => {
+    if (currentUser.role === 'admin') {
+      setHasAdminAccess(true);
+    }
+  }, [currentUser]);
+
+  const handleProfileChange = (e) => {
+    const { name, value } = e.target;
+    setProfileData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleProfileSubmit = (e) => {
+    e.preventDefault();
+    onUpdateUser({ ...currentUser, ...profileData });
+    setProfileMessage('¡Información de perfil actualizada con éxito!');
+    setTimeout(() => setProfileMessage(''), 3000);
+  };
+
+  const handleEmployeeChange = (e) => {
+    const { name, value } = e.target;
+    setEmployeeData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleEmployeePermissionChange = (e) => {
+    const { name, checked } = e.target;
+    setEmployeeData((prevData) => ({
+      ...prevData,
+      permissions: {
+        ...prevData.permissions,
+        [name]: checked,
+      },
+    }));
+  };
+
+  const handleCreateEmployeeSubmit = (e) => {
+    e.preventDefault();
+    if (!employeeData.name || !employeeData.lastName || !employeeData.password || !employeeData.phone || !employeeData.email) {
+      setEmployeeMessage('¡Por favor, completa todos los campos para crear un empleado!');
+      return;
+    }
+    const newEmployee = {
+      username: employeeData.email.split('@')[0],
+      password: employeeData.password,
+      role: 'cashier',
+      name: employeeData.name,
+      lastName: employeeData.lastName,
+      phone: employeeData.phone,
+      email: employeeData.email,
+      permissions: employeeData.permissions,
+    };
+    onCreateEmployee(newEmployee);
+    setEmployeeMessage(`¡Empleado ${newEmployee.name} ${newEmployee.lastName} creado con éxito!`);
+    setEmployeeData({
+      name: '', lastName: '', password: '', phone: '', email: '',
+      permissions: { canViewClients: true, canAddClients: false, canEditClients: false, canDeleteClients: false, canUpdateBalance: false, canRemovePayments: false, canExportImport: false, canBillMonthly: false, canMakePayments: true, },
+    });
+    setTimeout(() => setEmployeeMessage(''), 3000);
+  };
+
+  const handleEditEmployee = (employee) => {
+    setEditingEmployee(employee);
+    setEmployeeData({
+      name: employee.name,
+      lastName: employee.lastName,
+      password: employee.password,
+      phone: employee.phone,
+      email: employee.email,
+      permissions: employee.permissions || { canViewClients: true, canAddClients: false, canEditClients: false, canDeleteClients: false, canUpdateBalance: false, canRemovePayments: false, canExportImport: false, canBillMonthly: false, canMakePayments: true, },
+    });
+  };
+
+  const handleUpdateEmployeeSubmit = (e) => {
+    e.preventDefault();
+    if (!employeeData.name || !employeeData.lastName || !employeeData.password || !employeeData.phone || !employeeData.email) {
+      setEmployeeMessage('¡Por favor, completa todos los campos para actualizar el empleado!');
+      return;
+    }
+    const updatedEmployee = {
+      ...editingEmployee,
+      name: employeeData.name,
+      lastName: employeeData.lastName,
+      password: employeeData.password,
+      phone: employeeData.phone,
+      email: employeeData.email,
+      permissions: employeeData.permissions,
+    };
+    onUpdateEmployee(updatedEmployee);
+    setEmployeeMessage(`¡Empleado ${updatedEmployee.name} ${updatedEmployee.lastName} actualizado con éxito!`);
+    setEditingEmployee(null);
+    setEmployeeData({
+      name: '', lastName: '', password: '', phone: '', email: '',
+      permissions: { canViewClients: true, canAddClients: false, canEditClients: false, canDeleteClients: false, canUpdateBalance: false, canRemovePayments: false, canExportImport: false, canBillMonthly: false, canMakePayments: true, },
+    });
+    setTimeout(() => setEmployeeMessage(''), 3000);
+  };
+
+  const handleDeleteEmployee = (employeeId) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar a este empleado? ¡Esta acción no se puede deshacer!')) {
+      onDeleteEmployee(employeeId);
+      setEmployeeMessage('¡Empleado eliminado con éxito!');
+      setTimeout(() => setEmployeeMessage(''), 3000);
+    }
+  };
+
+  const handleAdminRegisterChange = (e) => {
+    const { name, value } = e.target;
+    setAdminRegisterData((prevData) => ({ ...prevData, [name]: value }));
+  };
+
+  const handleAdminRegisterSubmit = (e) => {
+    e.preventDefault();
+    if (!adminRegisterData.name || !adminRegisterData.lastName || !adminRegisterData.password || !adminRegisterData.phone || !adminRegisterData.email) {
+      setAdminRegisterMessage('¡Por favor, completa todos los campos para registrar un administrador!');
+      return;
+    }
+    const newAdmin = {
+      username: adminRegisterData.email.split('@')[0],
+      password: adminRegisterData.password,
+      role: 'admin',
+      name: adminRegisterData.name,
+      lastName: adminRegisterData.lastName,
+      phone: adminRegisterData.phone,
+      email: adminRegisterData.email,
+      permissions: { // Administradores tienen todos los permisos
+        canViewClients: true, canAddClients: true, canEditClients: true, canDeleteClients: true,
+        canUpdateBalance: true, canRemovePayments: true, canExportImport: true, canBillMonthly: true, canMakePayments: true,
+      },
+    };
+    onRegisterAdmin(newAdmin);
+    setAdminRegisterMessage(`¡Administrador ${newAdmin.name} ${newAdmin.lastName} creado con éxito!`);
+    setAdminRegisterData({ name: '', lastName: '', password: '', phone: '', email: '' });
+    setTimeout(() => setAdminRegisterMessage(''), 3000);
+  };
+
+  const handleEditAdmin = (adminUser) => {
+    setEditingAdmin(adminUser);
+    setAdminRegisterData({
+      name: adminUser.name,
+      lastName: adminUser.lastName,
+      password: adminUser.password,
+      phone: adminUser.phone,
+      email: adminUser.email,
+    });
+  };
+
+  const handleUpdateAdminSubmit = (e) => {
+    e.preventDefault();
+    if (!adminRegisterData.name || !adminRegisterData.lastName || !adminRegisterData.password || !adminRegisterData.phone || !adminRegisterData.email) {
+      setAdminRegisterMessage('¡Por favor, completa todos los campos para actualizar el administrador!');
+      return;
+    }
+    const updatedAdmin = {
+      ...editingAdmin,
+      name: adminRegisterData.name,
+      lastName: adminRegisterData.lastName,
+      password: adminRegisterData.password,
+      phone: adminRegisterData.phone,
+      email: adminRegisterData.email,
+      permissions: { // Administradores siempre tienen todos los permisos
+        canViewClients: true, canAddClients: true, canEditClients: true, canDeleteClients: true,
+        canUpdateBalance: true, canRemovePayments: true, canExportImport: true, canBillMonthly: true, canMakePayments: true,
+      },
+    };
+    onUpdateEmployee(updatedAdmin);
+    setAdminRegisterMessage(`¡Administrador ${updatedAdmin.name} ${updatedAdmin.lastName} actualizado con éxito!`);
+    setEditingAdmin(null);
+    setAdminRegisterData({ name: '', lastName: '', password: '', phone: '', email: '' });
+    setTimeout(() => setAdminRegisterMessage(''), 3000);
+  };
+
+  const handleAdminLoginSubmit = (e) => {
+    e.preventDefault();
+    if (adminLoginPassword === currentUser.password) {
+      setHasAdminAccess(true);
+      setAdminLoginError('');
+    } else {
+      setAdminLoginError('Contraseña incorrecta. ¡Intenta de nuevo!');
+    }
+  };
+
+  const handlePaymentDaysChange = (e) => {
+    const { name, value } = e.target;
+    setPaymentDaysData((prevData) => ({ ...prevData, [name]: parseInt(value) || 0 }));
+  };
+
+  const handlePaymentDaysSubmit = (e) => {
+    e.preventDefault();
+    if (paymentDaysData.nextPaymentDueDay <= 0 || paymentDaysData.nextPaymentDueDay > 31 ||
+        paymentDaysData.suspensionDay <= 0 || paymentDaysData.suspensionDay > 31 ||
+        paymentDaysData.billingDay <= 0 || paymentDaysData.billingDay > 30 ||
+        paymentDaysData.suspensionDay <= paymentDaysData.nextPaymentDueDay) {
+      setPaymentDaysMessage('¡Días de pago inválidos! Asegúrate que el día de suspensión sea mayor al día límite de pago y estén entre 1 y 30/31.');
+      return;
+    }
+    onUpdatePaymentDays(paymentDaysData);
+    setPaymentDaysMessage('¡Días de cobro actualizados con éxito!');
+    setTimeout(() => setPaymentDaysMessage(''), 3000);
+  };
+
+  const handleMonthlyFeeOptionChange = (key, value) => {
+    setMonthlyFeeOptions(prevOptions => ({
+      ...prevOptions,
+      [key]: parseFloat(value) || 0
+    }));
+  };
+
+  const handleMonthlyFeeOptionsSubmit = (e) => {
+    e.preventDefault();
+    localStorage.setItem('monthlyFeeOptions', JSON.stringify(monthlyFeeOptions));
+    setFeeOptionsMessage('¡Tarifas de mensualidad actualizadas con éxito!');
+    setTimeout(() => setFeeOptionsMessage(''), 3000);
+  };
+
+  if (currentUser.role === 'admin' && !hasAdminAccess) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <form onSubmit={handleAdminLoginSubmit} className="p-8 bg-white rounded-lg shadow-md w-full max-w-sm">
+          <h2 className="text-2xl font-bold mb-4 text-center">Acceso a Ajustes de Administrador</h2>
+          <p className="text-gray-600 text-center mb-4">Ingresa tu contraseña de administrador para continuar.</p>
+          <input
+            type="password"
+            placeholder="Contraseña de Administrador"
+            value={adminLoginPassword}
+            onChange={(e) => setAdminLoginPassword(e.target.value)}
+            className="w-full px-4 py-2 mb-4 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+            required
+          />
+          {adminLoginError && <p className="text-red-500 text-center mb-4">{adminLoginError}</p>}
+          <button
+            type="submit"
+            className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            >
+            Acceder a Ajustes
+          </button>
+        </form>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-6 bg-gray-100 min-h-screen">
+      <h2 className="text-3xl font-bold mb-6 text-gray-800">Ajustes</h2>
+
+      {/* Mi Cuenta - Información del Perfil */}
+      <div className="bg-white p-6 rounded-lg shadow-md mb-8 max-w-2xl mx-auto">
+        <h3 className="text-2xl font-semibold mb-4 text-gray-800">Mi Cuenta - Información del Perfil</h3>
+        <form onSubmit={handleProfileSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Nombre:</label>
+            <input
+              type="text"
+              name="name"
+              value={profileData.name}
+              onChange={handleProfileChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Apellido:</label>
+            <input
+              type="text"
+              name="lastName"
+              value={profileData.lastName}
+              onChange={handleProfileChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Número de Celular:</label>
+            <input
+              type="text"
+              name="phone"
+              value={profileData.phone}
+              onChange={handleProfileChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Correo Electrónico:</label>
+            <input
+              type="email"
+              name="email"
+              value={profileData.email}
+              onChange={handleProfileChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-700 text-sm font-bold mb-2">Estado (Rol):</label>
+            <input
+              type="text"
+              value={currentUser.role === 'admin' ? 'Administrador' : 'Caja'}
+              className="w-full px-4 py-2 bg-gray-100 border border-gray-300 rounded-lg cursor-not-allowed"
+              disabled
+            />
+          </div>
+          <button
+            type="submit"
+            className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            Guardar Cambios del Perfil
+          </button>
+          {profileMessage && <p className="text-green-600 text-center mt-2">{profileMessage}</p>}
+        </form>
+      </div>
+
+      {/* Modificar Días de Cobro (Solo para Administradores) */}
+      {currentUser.role === 'admin' && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8 max-w-2xl mx-auto">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-800">Modificar Días de Cobro</h3>
+          <form onSubmit={handlePaymentDaysSubmit} className="space-y-4">
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Día Límite de Pago (1-31):</label>
+              <input
+                type="number"
+                name="nextPaymentDueDay"
+                value={paymentDaysData.nextPaymentDueDay}
+                onChange={handlePaymentDaysChange}
+                min="1"
+                max="31"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Día de Suspensión (1-31):</label>
+              <input
+                type="number"
+                name="suspensionDay"
+                value={paymentDaysData.suspensionDay}
+                onChange={handlePaymentDaysChange}
+                min="1"
+                max="31"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Día de Facturación Mensual (1-30):</label>
+              <input
+                type="number"
+                name="billingDay"
+                value={paymentDaysData.billingDay}
+                onChange={handlePaymentDaysChange}
+                min="1"
+                max="30"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Guardar Días de Cobro
+            </button>
+            {paymentDaysMessage && <p className="text-green-600 text-center mt-2">{paymentDaysMessage}</p>}
+          </form>
+        </div>
+      )}
+
+      {/* Modificar Tarifas de Mensualidad (Solo para Administradores) */}
+      {currentUser.role === 'admin' && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8 max-w-2xl mx-auto">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-800">Modificar Tarifas de Mensualidad</h3>
+          <form onSubmit={handleMonthlyFeeOptionsSubmit} className="space-y-4">
+            {Object.keys(monthlyFeeOptions).map(key => (
+              <div key={key}>
+                <label className="block text-gray-700 text-sm font-bold mb-2">Tarifa {key}:</label>
+                <input
+                  type="number"
+                  name={key}
+                  value={monthlyFeeOptions[key]}
+                  onChange={(e) => handleMonthlyFeeOptionChange(key, e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                  required
+                />
+              </div>
+            ))}
+            <button
+              type="submit"
+              className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+            >
+              Guardar Tarifas
+            </button>
+            {feeOptionsMessage && <p className="text-green-600 text-center mt-2">{feeOptionsMessage}</p>}
+          </form>
+        </div>
+      )}
+
+      {/* Crear/Modificar Empleado (Solo para Administradores) */}
+      {currentUser.role === 'admin' && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8 max-w-2xl mx-auto">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-800">
+            {editingEmployee ? 'Modificar Empleado' : 'Crear Empleado (Caja)'}
+          </h3>
+          <form onSubmit={editingEmployee ? handleUpdateEmployeeSubmit : handleCreateEmployeeSubmit} className="space-y-4">
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Nombre:</label>
+              <input
+                type="text"
+                name="name"
+                value={employeeData.name}
+                onChange={handleEmployeeChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Apellido:</label>
+              <input
+                type="text"
+                name="lastName"
+                value={employeeData.lastName}
+                onChange={handleEmployeeChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Contraseña:</label>
+              <input
+                type="password"
+                name="password"
+                value={employeeData.password}
+                onChange={handleEmployeeChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Número de Celular:</label>
+              <input
+                type="text"
+                name="phone"
+                value={employeeData.phone}
+                onChange={handleEmployeeChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Correo Electrónico:</label>
+              <input
+                type="email"
+                name="email"
+                value={employeeData.email}
+                onChange={handleEmployeeChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            {/* Opciones de Permisos para Empleados de Caja */}
+            <div className="border border-gray-300 rounded-lg p-4 space-y-2">
+              <h4 className="text-md font-semibold mb-2">Permisos del Empleado:</h4>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canViewClients"
+                  checked={employeeData.permissions?.canViewClients || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Ver Clientes</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canMakePayments"
+                  checked={employeeData.permissions?.canMakePayments || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Realizar Pagos</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canAddClients"
+                  checked={employeeData.permissions?.canAddClients || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Registrar Clientes</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canEditClients"
+                  checked={employeeData.permissions?.canEditClients || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Modificar Clientes</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canDeleteClients"
+                  checked={employeeData.permissions?.canDeleteClients || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Eliminar Clientes</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canUpdateBalance"
+                  checked={employeeData.permissions?.canUpdateBalance || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Modificar Saldo</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canRemovePayments"
+                  checked={employeeData.permissions?.canRemovePayments || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Eliminar Pagos</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canExportImport"
+                  checked={employeeData.permissions?.canExportImport || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Exportar/Importar Datos</span>
+              </label>
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  name="canBillMonthly"
+                  checked={employeeData.permissions?.canBillMonthly || false} // Acceso seguro
+                  onChange={handleEmployeePermissionChange}
+                  className="form-checkbox h-5 w-5 text-black"
+                />
+                <span className="ml-2 text-gray-700">Facturar Mensualmente</span>
+              </label>
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              {editingEmployee ? 'Guardar Cambios del Empleado' : 'Crear Empleado'}
+            </button>
+            {editingEmployee && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingEmployee(null);
+                  setEmployeeData({ name: '', lastName: '', password: '', phone: '', email: '', permissions: { canViewClients: true, canAddClients: false, canEditClients: false, canDeleteClients: false, canUpdateBalance: false, canRemovePayments: false, canExportImport: false, canBillMonthly: false, canMakePayments: true, }, });
+                }}
+                className="w-full bg-gray-400 text-white py-2 rounded-lg hover:bg-gray-500 transition-colors mt-2"
+              >
+                Cancelar Edición
+              </button>
+            )}
+            {employeeMessage && <p className="text-green-600 text-center mt-2">{employeeMessage}</p>}
+          </form>
+        </div>
+      )}
+
+      {/* Registrar/Modificar Administrador (Solo para Administradores) */}
+      {currentUser.role === 'admin' && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8 max-w-2xl mx-auto">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-800">
+            {editingAdmin ? 'Modificar Administrador' : 'Registrar Nuevo Administrador'}
+          </h3>
+          <form onSubmit={editingAdmin ? handleUpdateAdminSubmit : handleAdminRegisterSubmit} className="space-y-4">
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Nombre:</label>
+              <input
+                type="text"
+                name="name"
+                value={adminRegisterData.name}
+                onChange={handleAdminRegisterChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Apellido:</label>
+              <input
+                type="text"
+                name="lastName"
+                value={adminRegisterData.lastName}
+                onChange={handleAdminRegisterChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Contraseña:</label>
+              <input
+                type="password"
+                name="password"
+                value={adminRegisterData.password}
+                onChange={handleAdminRegisterChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Número de Celular:</label>
+              <input
+                type="text"
+                name="phone"
+                value={adminRegisterData.phone}
+                onChange={handleAdminRegisterChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 text-sm font-bold mb-2">Correo Electrónico (será el usuario):</label>
+              <input
+                type="email"
+                name="email"
+                value={adminRegisterData.email}
+                onChange={handleAdminRegisterChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              {editingAdmin ? 'Guardar Cambios del Administrador' : 'Registrar Administrador'}
+            </button>
+            {editingAdmin && (
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingAdmin(null);
+                  setAdminRegisterData({ name: '', lastName: '', password: '', phone: '', email: '' });
+                }}
+                className="w-full bg-gray-400 text-white py-2 rounded-lg hover:bg-gray-500 transition-colors mt-2"
+              >
+                Cancelar Edición
+              </button>
+            )}
+            {adminRegisterMessage && <p className="text-green-600 text-center mt-2">{adminRegisterMessage}</p>}
+          </form>
+        </div>
+      )}
+
+      {/* Información de Empleados Existentes (Solo para Administradores) */}
+      {currentUser.role === 'admin' && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8 max-w-2xl mx-auto mt-8">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-800">Información de Empleados</h3>
+          {users.filter(user => user.role === 'cashier').length === 0 ? (
+            <p className="text-gray-600">No hay empleados registrados aún.</p>
+          ) : (
+            <ul className="space-y-4">
+              {users.filter(user => user.role === 'cashier').map((employee, index) => (
+                <li key={index} className="border border-gray-200 p-4 rounded-lg bg-gray-50 flex justify-between items-center">
+                  <div>
+                    <p><span className="font-semibold">Usuario:</span> {employee.username}</p>
+                    <p><span className="font-semibold">Nombre:</span> {employee.name} {employee.lastName}</p>
+                    <p><span className="font-semibold">Celular:</span> {employee.phone}</p>
+                    <p><span className="font-semibold">Correo:</span> {employee.email}</p>
+                    <p><span className="font-semibold">Rol:</span> Caja</p>
+                    <p className="text-xs text-gray-500 mt-1">Permisos: {Object.keys(employee.permissions || {}).filter(key => employee.permissions[key]).map(key => key.replace('can', '')).join(', ')}</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={() => handleEditEmployee(employee)}
+                      className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
+                    >
+                      Modificar
+                    </button>
+                    <button
+                      onClick={() => handleDeleteEmployee(employee.username)}
+                      className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors text-sm"
+                    >
+                      Eliminar
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      {/* Información de Administradores Existentes (Solo para Administradores) */}
+      {currentUser.role === 'admin' && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-8 max-w-2xl mx-auto mt-8">
+          <h3 className="text-2xl font-semibold mb-4 text-gray-800">Información de Administradores</h3>
+          {users.filter(user => user.role === 'admin').length === 0 ? (
+            <p className="text-gray-600">No hay administradores registrados aún.</p>
+          ) : (
+            <ul className="space-y-4">
+              {users.filter(user => user.role === 'admin').map((adminUser, index) => (
+                <li key={index} className="border border-gray-200 p-4 rounded-lg bg-gray-50 flex justify-between items-center">
+                  <div>
+                    <p><span className="font-semibold">Usuario:</span> {adminUser.username}</p>
+                    <p><span className="font-semibold">Nombre:</span> {adminUser.name} {adminUser.lastName}</p>
+                    <p><span className="font-semibold">Celular:</span> {adminUser.phone}</p>
+                    <p><span className="font-semibold">Correo:</span> {adminUser.email}</p>
+                    <p><span className="font-semibold">Rol:</span> Administrador</p>
+                  </div>
+                  <div className="flex space-x-2">
+                    {adminUser.username !== currentUser.username && (
+                      <button
+                        onClick={() => handleEditAdmin(adminUser)}
+                        className="bg-blue-500 text-white px-3 py-1 rounded-md hover:bg-blue-600 transition-colors text-sm"
+                      >
+                        Modificar
+                      </button>
+                    )}
+                    {adminUser.username !== currentUser.username && (
+                      <button
+                        onClick={() => handleDeleteEmployee(adminUser.username)}
+                        className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition-colors text-sm"
+                      >
+                        Eliminar
+                      </button>
+                    )}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// /components/PublicQuery.js
+const PublicQuery = ({ clients, onNavigateToLogin }) => {
+  const [cedula, setCedula] = useState('');
+  const [clientInfo, setClientInfo] = useState(null);
+  const [message, setMessage] = useState('');
+
+  const handleQuery = (e) => {
+    e.preventDefault();
+    const foundClient = clients.find(client => client.cedula === cedula);
+    if (foundClient) {
+      setClientInfo(foundClient);
+      setMessage('');
+    } else {
+      setClientInfo(null);
+      setMessage('¡Cédula no encontrada! Por favor, verifica el número.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-blue-600 to-purple-700 text-white p-4">
+      <h1 className="text-4xl font-extrabold mb-6 drop-shadow-lg">
+        Consulta de Saldo
+      </h1>
+      <form onSubmit={handleQuery} className="bg-white p-8 rounded-lg shadow-xl w-full max-w-md space-y-6">
+        <input
+          type="text"
+          placeholder="Ingresa número de Cédula"
+          value={cedula}
+          onChange={(e) => setCedula(e.target.value)}
+          className="w-full px-5 py-3 border border-gray-300 rounded-lg text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-300"
+          required
+        />
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold text-lg hover:bg-blue-700 transition-all duration-300 shadow-lg"
+        >
+          Consultar
+        </button>
+      </form>
+
+      {message && <p className="text-red-300 mt-4 text-center">{message}</p>}
+
+      {clientInfo && (
+        <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md mt-6 text-gray-800">
+          <h3 className="text-2xl font-bold mb-4 text-center">Información del Cliente</h3>
+          <p className="text-lg mb-2"><span className="font-semibold">Nombre:</span> {clientInfo.name} {clientInfo.lastName}</p>
+          <p className="text-lg mb-2"><span className="font-semibold">Celular:</span> {clientInfo.phone}</p>
+          <p className="text-lg mb-2"><span className="font-semibold">Saldo Actual:</span> ${clientInfo.balance.toLocaleString('es-CO')}</p>
+          <p className="text-lg"><span className="font-semibold">Estado:</span> {clientInfo.status}</p>
+        </div>
+      )}
+
+      <button
+        onClick={onNavigateToLogin}
+        className="mt-8 text-white text-lg hover:underline transition-colors duration-300"
+      >
+        Acceder al Sistema
+      </button>
+    </div>
+  );
+};
+
+// /mock/clients.js
+const initialClients = [
+  {
+    id: '1',
+    name: 'Juan',
+    lastName: 'Pérez',
+    cedula: '123456789',
+    phone: '5512345678',
+    address: 'Calle Falsa 123',
+    comment: 'Cliente puntual',
+    monthlyFeeIdentifier: 'A',
+    monthlyFee: 60000,
+    balance: 0,
+    status: 'Al día',
+    lastPaymentDate: new Date().toISOString(),
+    payments: [{ amount: 60000, date: new Date().toISOString(), type: 'Pago completo', by: 'Admin' }],
+    modifications: [{ date: new Date().toISOString(), by: 'Admin', type: 'Creación de Cliente' }],
+    daysRemainingInMonth: 30,
+    mac: null, // Nuevo campo para MAC
+    ip: null,  // Nuevo campo para IP
+    clientType: 'Normal',
+  },
+  {
+    id: '2',
+    name: 'María',
+    lastName: 'Gómez',
+    cedula: '987654321',
+    phone: '5587654321',
+    address: 'Avenida Siempre Viva 456',
+    comment: 'Debe un mes',
+    monthlyFeeIdentifier: 'A',
+    monthlyFee: 60000,
+    balance: 60000,
+    status: 'Pendiente',
+    lastPaymentDate: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString(),
+    payments: [{ amount: 60000, date: new Date(new Date().setMonth(new Date().getMonth() - 1)).toISOString(), type: 'Pago completo', by: 'Admin' }],
+    modifications: [{ date: new Date().toISOString(), by: 'Admin', type: 'Creación de Cliente' }],
+    daysRemainingInMonth: 30,
+    mac: null,
+    ip: null,
+    clientType: 'Normal',
+  },
+  {
+    id: '3',
+    name: 'Carlos',
+    lastName: 'Ruiz',
+    cedula: '456789123',
+    phone: '5511223344',
+    address: 'Boulevard de los Sueños 789',
+    comment: 'Suspendido por falta de pago',
+    monthlyFeeIdentifier: 'A',
+    monthlyFee: 60000,
+    balance: 120000,
+    status: 'Suspendido',
+    lastPaymentDate: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString(),
+    payments: [{ amount: 60000, date: new Date(new Date().setMonth(new Date().getMonth() - 2)).toISOString(), type: 'Pago completo', by: 'Admin' }],
+    modifications: [{ date: new Date().toISOString(), by: 'Admin', type: 'Creación de Cliente' }],
+    daysRemainingInMonth: 30,
+    mac: 'AA:BB:CC:DD:EE:FF', // Cliente con equipo asignado
+    ip: '192.168.1.100',
+    clientType: 'Normal',
+  },
+  {
+    id: '4',
+    name: 'Ana',
+    lastName: 'López',
+    cedula: '321987654',
+    phone: '5599887766',
+    address: 'Privada del Sol 101',
+    comment: 'Abonó la mitad',
+    monthlyFeeIdentifier: 'A',
+    monthlyFee: 60000,
+    balance: 30000,
+    status: 'Pendiente',
+    lastPaymentDate: new Date(new Date().setMonth(new Date().getMonth() - 0.5)).toISOString(),
+    payments: [{ amount: 30000, date: new Date(new Date().setMonth(new Date().getMonth() - 0.5)).toISOString(), type: 'Abono', by: 'Admin' }],
+    modifications: [{ date: new Date().toISOString(), by: 'Admin', type: 'Creación de Cliente' }],
+    daysRemainingInMonth: 30,
+    mac: null,
+    ip: null,
+    clientType: 'Normal',
+  },
+];
+
+// /components/LayoutHeader.js
+const LayoutHeader = ({ currentPage, onNavigate, userRole, onLogout }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+  const navItems = [
+    { name: 'Ver Clientes', page: 'list', roles: ['admin', 'cashier'] },
+    { name: 'Registrar Cliente', page: 'add', roles: ['admin'] },
+    { name: 'Eliminar Clientes', page: 'delete', roles: ['admin'] },
+    { name: 'Asignar Equipo', page: 'assignEquipment', roles: ['admin'] }, // Nueva opción en el menú
+    { name: 'Ajustes', page: 'settings', roles: ['admin'] },
+    { name: 'Exportar/Importar', page: 'excel', roles: ['admin'] },
+    { name: 'Facturar Mensual', page: 'bill', roles: ['admin'] },
+  ];
+
+  const handleNavigateClick = (page) => {
+    onNavigate(page);
+    setIsMenuOpen(false);
+  };
+
+  return (
+    <header className="bg-black text-white p-4 shadow-lg relative z-10">
+      <nav className="container mx-auto flex justify-between items-center">
+        <h1 className="text-3xl font-bold">CONEXION</h1>
+        <div className="flex items-center">
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="p-2 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-white"
+          >
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+          </button>
+
+          {isMenuOpen && (
+            <div className="absolute top-full right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-20">
+              {navItems.map((item) => (
+                (item.roles.includes(userRole)) && (
+                  <button
+                    key={item.page}
+                    onClick={() => handleNavigateClick(item.page)}
+                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-700 transition-colors ${
+                      currentPage === item.page ? 'bg-gray-700' : ''
+                    }`}
+                  >
+                    {item.name}
+                  </button>
+                )
+              ))}
+              <button
+                onClick={onLogout}
+                className="block w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 transition-colors border-t border-gray-700 mt-1 pt-2"
+              >
+                Cerrar Sesión
+              </button>
+            </div>
+          )}
+        </div>
+      </nav>
+    </header>
+  );
+};
+
+// /components/AssignEquipment.js
+const AssignEquipment = ({ clients, onAssignEquipment, onModifyEquipment, onNavigateBack }) => {
+  const [selectedClientId, setSelectedClientId] = useState('');
+  const [mac, setMac] = useState('');
+  const [ip, setIp] = useState('');
+  const [message, setMessage] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [macError, setMacError] = useState('');
+  const [ipError, setIpError] = useState('');
+  const [searchName, setSearchName] = useState(''); // Nuevo estado para la búsqueda por nombre
+
+  const unassignedClients = clients.filter(client => !client.mac && !client.ip);
+  const assignedClients = clients.filter(client => client.mac || client.ip);
+
+  // Clientes filtrados por búsqueda para la edición
+  const filteredAssignedClients = assignedClients.filter(client =>
+    client.name.toLowerCase().includes(searchName.toLowerCase()) ||
+    client.lastName.toLowerCase().includes(searchName.toLowerCase())
+  );
+
+  useEffect(() => {
+    if (isEditing && selectedClientId) {
+      const clientToEdit = clients.find(client => client.id === selectedClientId);
+      if (clientToEdit) {
+        setMac(clientToEdit.mac || '');
+        setIp(clientToEdit.ip || '');
+      }
+    } else {
+      setMac('');
+      setIp('');
+    }
+    setMacError('');
+    setIpError('');
+    setMessage('');
+  }, [selectedClientId, isEditing, clients]);
+
+  const handleMacChange = (e) => {
+    const newMac = e.target.value;
+    setMac(newMac);
+    const existingMacClient = clients.find(client => client.mac === newMac && client.id !== selectedClientId);
+    if (existingMacClient) {
+      setMacError('¡Esta MAC ya está asignada a otro cliente!');
+    } else {
+      setMacError('');
+    }
+  };
+
+  const handleIpChange = (e) => {
+    const newIp = e.target.value;
+    setIp(newIp);
+    const existingIpClient = clients.find(client => client.ip === newIp && client.id !== selectedClientId);
+    if (existingIpClient) {
+      setIpError('¡Esta IP ya está asignada a otro cliente!');
+    } else {
+      setIpError('');
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const existingMacClient = clients.find(client => client.mac === mac && client.id !== selectedClientId);
+    if (existingMacClient) {
+      setMacError('¡Esta MAC ya está asignada a otro cliente!');
+      return;
+    } else {
+      setMacError('');
+    }
+
+    const existingIpClient = clients.find(client => client.ip === ip && client.id !== selectedClientId);
+    if (existingIpClient) {
+      setIpError('¡Esta IP ya está asignada a otro cliente!');
+      return;
+    } else {
+      setIpError('');
+    }
+
+    if (!selectedClientId || !mac || !ip) {
+      setMessage('¡Por favor, selecciona un cliente e ingresa la MAC y la IP!');
+      return;
+    }
+    if (macError || ipError) {
+      setMessage('¡Corrige los errores de MAC/IP antes de continuar!');
+      return;
+    }
+
+    if (isEditing) {
+      onModifyEquipment(selectedClientId, mac, ip);
+      setMessage('¡Equipo modificado con éxito!');
+    } else {
+      onAssignEquipment(selectedClientId, mac, ip);
+      setMessage('¡Equipo asignado con éxito!');
+    }
+    setSelectedClientId('');
+    setMac('');
+    setIp('');
+    setIsEditing(false);
+    setSearchName(''); // Limpiar búsqueda al enviar
+    setTimeout(() => setMessage(''), 3000);
+  };
+
+  return (
+    <div className="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-center">
+        {isEditing ? 'Modificar Equipo de Cliente' : 'Asignar Equipo a Cliente'}
+      </h2>
+
+      <div className="flex justify-center mb-4 space-x-4">
+        <button
+          onClick={() => { setIsEditing(false); setSelectedClientId(''); setSearchName(''); }}
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+            !isEditing ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+          }`}
+        >
+          Asignar Nuevo
+        </button>
+        <button
+          onClick={() => { setIsEditing(true); setSelectedClientId(''); setSearchName(''); }}
+          className={`px-4 py-2 rounded-lg font-semibold transition-colors ${
+            isEditing ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+          }`}
+        >
+          Modificar Existente
+        </button>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {isEditing && (
+          <div>
+            <label htmlFor="search-name" className="block text-gray-700 text-sm font-bold mb-2">
+              Buscar Cliente por Nombre:
+            </label>
+            <input
+              type="text"
+              id="search-name"
+              placeholder="Escribe el nombre o apellido"
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+            />
+          </div>
+        )}
+        <div>
+          <label htmlFor="client-select" className="block text-gray-700 text-sm font-bold mb-2">
+            Seleccionar Cliente:
+          </label>
+          <select
+            id="client-select"
+            value={selectedClientId}
+            onChange={(e) => setSelectedClientId(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+            required
+          >
+            <option value="">-- Selecciona un cliente --</option>
+            {isEditing ? (
+              filteredAssignedClients.map(client => (
+                <option key={client.id} value={client.id}>
+                  {client.name} {client.lastName} (Cédula: {client.cedula})
+                </option>
+              ))
+            ) : (
+              unassignedClients.map(client => (
+                <option key={client.id} value={client.id}>
+                  {client.name} {client.lastName} (Cédula: {client.cedula})
+                </option>
+              ))
+            )}
+          </select>
+          {isEditing && filteredAssignedClients.length === 0 && searchName && (
+            <p className="text-sm text-gray-500 mt-2">No se encontraron clientes con ese nombre.</p>
+          )}
+          {isEditing && assignedClients.length === 0 && !searchName && (
+            <p className="text-sm text-gray-500 mt-2">¡No hay clientes con equipo asignado para modificar!</p>
+          )}
+          {!isEditing && unassignedClients.length === 0 && (
+            <p className="text-sm text-gray-500 mt-2">¡Todos los clientes ya tienen un equipo asignado!</p>
+          )}
+        </div>
+        <div>
+          <label htmlFor="mac-input" className="block text-gray-700 text-sm font-bold mb-2">
+            MAC:
+          </label>
+          <input
+            type="text"
+            id="mac-input"
+            placeholder="Ej: AA:BB:CC:DD:EE:FF"
+            value={mac}
+            onChange={handleMacChange}
+            className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 transition ${
+              macError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'
+            }`}
+            required
+          />
+          {macError && <p className="text-red-500 text-sm mt-1">{macError}</p>}
+        </div>
+        <div>
+          <label htmlFor="ip-input" className="block text-gray-700 text-sm font-bold mb-2">
+            IP:
+          </label>
+          <input
+            type="text"
+            id="ip-input"
+            placeholder="Ej: 192.168.1.1"
+            value={ip}
+            onChange={handleIpChange}
+            className={`w-full px-4 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-2 transition ${
+              ipError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'
+            }`}
+            required
+          />
+          {ipError && <p className="text-red-500 text-sm mt-1">{ipError}</p>}
+        </div>
+        <button
+          type="submit"
+          className="w-full bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+          disabled={!!macError || !!ipError || !selectedClientId}
+        >
+          {isEditing ? 'Guardar Cambios' : 'Asignar Equipo'}
+        </button>
+        {message && <p className="text-green-600 text-center mt-2">{message}</p>}
+      </form>
+      <button
+        onClick={onNavigateBack}
+        className="w-full mt-4 bg-gray-500 text-white py-2 rounded-lg hover:bg-gray-600 transition-colors"
+      >
+        Volver al Menú Principal
+      </button>
+    </div>
+  );
+};
+
+// /components/ClientForm.js
+const ClientForm = ({ onAddClient, onUpdateClient, editingClient, existingClientCedulas, currentUser, clientCount }) => {
+  const [client, setClient] = useState({
+    clientType: 'Normal',
+    name: '',
+    lastName: '',
+    cedula: '',
+    phone: '',
+    address: '',
+    comment: '',
+    place: '',
+    monthlyFeeIdentifier: 'A',
+  });
+  const [cedulaError, setCedulaError] = useState('');
+  const [monthlyFeeOptions, setMonthlyFeeOptions] = useState({});
+
+  useEffect(() => {
+    if (editingClient) {
+      setClient(editingClient);
+    } else {
+      setClient({
+        clientType: 'Normal',
+        name: '',
+        lastName: '',
+        cedula: '',
+        phone: '',
+        address: '',
+        comment: '',
+        place: '',
+        monthlyFeeIdentifier: 'A',
+      });
+    }
+    setCedulaError('');
+  }, [editingClient]);
+
+  useEffect(() => {
+    const storedOptions = JSON.parse(localStorage.getItem('monthlyFeeOptions'));
+    if (storedOptions) {
+      setMonthlyFeeOptions(storedOptions);
+    }
+  }, []);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setClient((prevClient) => ({ ...prevClient, [name]: value }));
+
+    if (name === 'cedula') {
+      if (existingClientCedulas && existingClientCedulas.includes(value) && (!editingClient || editingClient.cedula !== value)) {
+        setCedulaError('¡Esta cédula ya está registrada! Por favor, usa otra.');
+      } else {
+        setCedulaError('');
+      }
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (cedulaError) { // No permitir enviar si hay error de cédula
+      return;
+    }
+
+    if (existingClientCedulas && existingClientCedulas.includes(client.cedula) && (!editingClient || editingClient.cedula !== client.cedula)) {
+      setCedulaError('¡Esta cédula ya está registrada! Por favor, usa otra.');
+      return;
+    }
+
+    const monthlyFeeValue = monthlyFeeOptions[client.monthlyFeeIdentifier] || 0;
+
+    if (editingClient) {
+      const updatedClient = {
+        ...client,
+        monthlyFee: monthlyFeeValue, // Guardar el valor numérico
+      };
+      onUpdateClient(updatedClient); // onUpdateClient ahora maneja la adición de la modificación
+    } else {
+      const newClient = {
+        ...client,
+        monthlyFee: monthlyFeeValue, // Guardar el valor numérico
+      };
+      onAddClient(newClient);
+    }
+  };
+
+  const formattedAbonadoNumber = String(clientCount + 1).padStart(4, '0');
+
+  return (
+    <form onSubmit={handleSubmit} className="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
+      <h2 className="text-2xl font-bold mb-4 text-center">
+        {editingClient ? 'Modificar Cliente' : 'Agregar Cliente'}
+      </h2>
+      {!editingClient && (
+        <p className="text-lg font-semibold text-gray-700 mb-4 text-center">
+          # Abonado: {formattedAbonadoNumber}
+        </p>
+      )}
+
+      <div className="mb-4">
+        <label htmlFor="clientType" className="block text-gray-700 text-sm font-bold mb-2">
+          Tipo de Cliente:
+        </label>
+        <select
+          id="clientType"
+          name="clientType"
+          value={client.clientType}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+          required
+        >
+          <option value="Normal">Normal</option>
+          <option value="Exonerado">Exonerado</option>
+          <option value="Comodato">Comodato</option>
+        </select>
+      </div>
+
+      <input
+        type="text"
+        name="name"
+        placeholder="Nombre"
+        value={client.name}
+        onChange={handleChange}
+        className="w-full mt-3 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+        required
+      />
+      <input
+        type="text"
+        name="lastName"
+        placeholder="Apellido"
+        value={client.lastName}
+        onChange={handleChange}
+        className="w-full mt-3 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+        required
+      />
+      <input
+        type="text"
+        name="cedula"
+        placeholder="Número de Cédula"
+        value={client.cedula}
+        onChange={handleChange}
+        className={`w-full mt-3 px-4 py-2 bg-white border rounded-lg shadow-sm focus:outline-none focus:ring-2 transition ${
+          cedulaError ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-black'
+        }`}
+        required
+      />
+      {cedulaError && <p className="text-red-500 text-sm mt-1">{cedulaError}</p>}
+      <input
+        type="text"
+        name="phone"
+        placeholder="Celular"
+        value={client.phone}
+        onChange={handleChange}
+        className="w-full mt-3 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+        required
+      />
+      <input
+        type="text"
+        name="address"
+        placeholder="Dirección"
+        value={client.address}
+        onChange={handleChange}
+        className="w-full mt-3 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+        required
+      />
+      <input
+        type="text"
+        name="place"
+        placeholder="Lugar"
+        value={client.place}
+        onChange={handleChange}
+        className="w-full mt-3 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+        required
+      />
+      
+      <div className="mt-3">
+        <label htmlFor="monthlyFeeIdentifier" className="block text-gray-700 text-sm font-bold mb-2">
+          Mensualidad (Identificador):
+        </label>
+        <select
+          id="monthlyFeeIdentifier"
+          name="monthlyFeeIdentifier"
+          value={client.monthlyFeeIdentifier}
+          onChange={handleChange}
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition"
+          required
+        >
+          {Object.keys(monthlyFeeOptions).map(key => (
+            <option key={key} value={key}>
+              {key} - ${monthlyFeeOptions[key].toLocaleString('es-CO')}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <textarea
+        name="comment"
+        placeholder="Comentario"
+        value={client.comment}
+        onChange={handleChange}
+        rows="3"
+        className="w-full mt-3 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition resize-none"
+      ></textarea>
+      <button
+        type="submit"
+        className="w-full mt-4 bg-black text-white py-2 rounded-lg hover:bg-gray-800 transition-colors"
+        disabled={!!cedulaError}
+      >
+        {editingClient ? 'Guardar Cambios' : 'Agregar Cliente'}
+      </button>
+    </form>
+  );
+};
+
+// /App.js
+const App = () => {
+  const [clients, setClients] = useState(() => getStorage('clients', initialClients));
+  const [currentPage, setCurrentPage] = useState('welcome');
+  const [editingClient, setEditingClient] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(() => getStorage('isLoggedIn', false));
+  const [currentUser, setCurrentUser] = useState(() => getStorage('currentUser', null));
+  const [showReceipt, setShowReceipt] = useState(false);
+  const [receiptData, setReceiptData] = useState(null);
+  const [messageText, setMessageText] = useState('');
+  const [messageRecipient, setMessageRecipient] = useState('all');
+
+  useEffect(() => {
+    setStorage('clients', clients);
+  }, [clients]);
+
+  useEffect(() => {
+    setStorage('isLoggedIn', isLoggedIn);
+    setStorage('currentUser', currentUser);
+  }, [isLoggedIn, currentUser]);
+
+  const handleWelcomeEnter = () => {
+    setCurrentPage('publicQuery');
+  };
+
+  const handleLogin = (user) => {
+    setIsLoggedIn(true);
+    setCurrentUser(user);
+    setCurrentPage('list');
+  };
+
+  const handleRegister = (newUser) => {
+    if (newUser.role === 'admin' && users.filter(u => u.role === 'admin').length >= 3) {
+      alert('¡Ya se ha alcanzado el límite de 3 administradores!');
+      return;
+    }
+    if (users.some(u => u.username === newUser.username)) {
+      alert('¡Ya existe un usuario con ese correo electrónico!');
+      return;
+    }
+
+    users.push(newUser);
+    alert(`Usuario ${newUser.username} registrado con éxito como ${newUser.role}. ¡Ahora inicia sesión!`);
+    setCurrentPage('login');
+  };
+
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setCurrentUser(null);
+    removeStorage('isLoggedIn');
+    removeStorage('currentUser');
+    setCurrentPage('login');
+    setEditingClient(null);
+  };
+
+  const handleAddClient = (newClientData) => {
+    const today = new Date();
+    const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+    const daysInMonth = lastDayOfMonth;
+    const daysRemaining = lastDayOfMonth - today.getDate() + 1;
+
+    const monthlyFeeOptions = JSON.parse(localStorage.getItem('monthlyFeeOptions')) || { A: 60000 };
+    const assignedMonthlyFee = monthlyFeeOptions[newClientData.monthlyFeeIdentifier] || 0;
+
+    const initialBalance = (assignedMonthlyFee / daysInMonth) * daysRemaining;
+
+    const newClient = {
+      id: Date.now().toString(),
+      ...newClientData,
+      balance: initialBalance,
+      status: initialBalance > 0 ? 'Pendiente' : 'Al día',
+      lastPaymentDate: new Date().toISOString(),
+      payments: [],
+      modifications: [{ date: new Date().toISOString(), by: currentUser.username, type: 'Creación de Cliente' }],
+      daysRemainingInMonth: daysRemaining,
+      mac: null,
+      ip: null,
+    };
+    setClients((prevClients) => [...prevClients, newClient]);
+    setCurrentPage('list');
+  };
+
+  const handleUpdateClient = (updatedClientData) => {
+    setClients((prevClients) =>
+      prevClients.map((client) => {
+        if (client.id === updatedClientData.id) {
+          const changes = [];
+          let newMonthlyFee = client.monthlyFee;
+
+          if (updatedClientData.monthlyFeeIdentifier !== client.monthlyFeeIdentifier) {
+            const monthlyFeeOptions = JSON.parse(localStorage.getItem('monthlyFeeOptions')) || { A: 60000 };
+            newMonthlyFee = monthlyFeeOptions[updatedClientData.monthlyFeeIdentifier] || 0;
+
+            if (client.balance <= 0) {
+              const today = new Date();
+              const lastDayOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+              const daysInMonth = lastDayOfMonth;
+              const daysRemaining = lastDayOfMonth - today.getDate() + 1;
+              updatedClientData.balance = (newMonthlyFee / daysInMonth) * daysRemaining;
+              updatedClientData.status = updatedClientData.balance > 0 ? 'Pendiente' : 'Al día';
+            }
+            changes.push(`Mensualidad: '${client.monthlyFeeIdentifier}' ($${client.monthlyFee.toLocaleString('es-CO')}) -> '${updatedClientData.monthlyFeeIdentifier}' ($${newMonthlyFee.toLocaleString('es-CO')})`);
+          }
+
+          for (const key in updatedClientData) {
+            if (updatedClientData[key] !== client[key] && key !== 'modifications' && key !== 'monthlyFee' && key !== 'balance' && key !== 'status') {
+              changes.push(`${key}: '${client[key]}' -> '${updatedClientData[key]}'`);
+            }
+          }
+          
+          const modificationEntry = {
+            date: new Date().toISOString(),
+            by: currentUser.username,
+            type: 'Modificación de Cliente',
+            details: changes.length > 0 ? changes.join(', ') : 'Sin cambios específicos',
+          };
+          return {
+            ...updatedClientData,
+            monthlyFee: newMonthlyFee,
+            modifications: [...(client.modifications || []), modificationEntry],
+          };
+        }
+        return client;
+      })
+    );
+    setEditingClient(null);
+    setCurrentPage('list');
+  };
+
+  const handleAssignEquipment = (clientId, mac, ip) => {
+    setClients(prevClients => prevClients.map(client => {
+      if (client.id === clientId) {
+        const modificationEntry = {
+          date: new Date().toISOString(),
+          by: currentUser.username,
+          type: 'Asignación de Equipo',
+          details: `MAC: ${mac}, IP: ${ip}`,
+        };
+        return {
+          ...client,
+          mac: mac,
+          ip: ip,
+          modifications: [...(client.modifications || []), modificationEntry],
+        };
+      }
+      return client;
+    }));
+    setCurrentPage('list');
+  };
+
+  const handleModifyEquipment = (clientId, mac, ip) => {
+    setClients(prevClients => prevClients.map(client => {
+      if (client.id === clientId) {
+        const oldMac = client.mac;
+        const oldIp = client.ip;
+        const modificationEntry = {
+          date: new Date().toISOString(),
+          by: currentUser.username,
+          type: 'Modificación de Equipo',
+          details: `MAC: ${oldMac} -> ${mac}, IP: ${oldIp} -> ${ip}`,
+        };
+        return {
+          ...client,
+          mac: mac,
+          ip: ip,
+          modifications: [...(client.modifications || []), modificationEntry],
+        };
+      }
+      return client;
+    }));
+    setCurrentPage('list');
+  };
+
+  const handleDeleteClient = (clientId) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar a este cliente? ¡Esta acción no se puede deshacer!')) {
+      setClients((prevClients) => prevClients.filter((client) => client.id !== clientId));
+    }
+  };
+
+  const handleDeleteAllClients = () => {
+    if (window.confirm('¡ADVERTENCIA! ¿Estás ABSOLUTAMENTE seguro de que quieres eliminar a TODOS los clientes? ¡Esta acción no se puede deshacer!')) {
+      setClients([]);
+      alert('¡Todos los clientes han sido eliminados!');
+    }
+  };
+
+  const handleEditClient = (client) => {
+    setEditingClient(client);
+    setCurrentPage('add');
+  };
+
+  const handleUpdateBalance = (clientId, newBalance) => {
+    setClients((prevClients) =>
+      prevClients.map((client) => {
+        if (client.id === clientId) {
+          const oldBalance = client.balance;
+          const newStatus = newBalance <= 0 ? 'Al día' : 'Pendiente';
+          const modificationEntry = {
+            date: new Date().toISOString(),
+            by: currentUser.username,
+            type: 'Actualización de Saldo Manual',
+            details: `Saldo: $${oldBalance.toLocaleString('es-CO')} -> $${newBalance.toLocaleString('es-CO')}`,
+          };
+          return {
+            ...client,
+            balance: newBalance,
+            status: newStatus,
+            modifications: [...(client.modifications || []), modificationEntry],
+          };
+        }
+        return client;
+      })
+    );
+  };
+
+  const handlePay = (clientId, monthlyFee, paymentType) => {
+    setClients((prevClients) =>
+      prevClients.map((client) => {
+        if (client.id === clientId) {
+          const newBalance = client.balance - monthlyFee;
+          const newStatus = newBalance <= 0 ? 'Al día' : 'Pendiente';
+          const paymentRecord = {
+            amount: monthlyFee,
+            date: new Date().toISOString(),
+            type: paymentType,
+            by: currentUser.username,
+          };
+          
+          setReceiptData({ client: { ...client, balance: newBalance }, payment: paymentRecord });
+          setShowReceipt(true);
+
+          const modificationEntry = {
+            date: new Date().toISOString(),
+            by: currentUser.username,
+            type: `Pago de Mensualidad (${paymentType})`,
+            details: `Monto: $${monthlyFee.toLocaleString('es-CO')}, Saldo anterior: $${client.balance.toLocaleString('es-CO')}, Nuevo saldo: $${newBalance.toLocaleString('es-CO')}`,
+          };
+
+          return {
+            ...client,
+            balance: newBalance,
+            status: newStatus,
+            lastPaymentDate: new Date().toISOString(),
+            payments: [...client.payments, paymentRecord],
+            modifications: [...(client.modifications || []), modificationEntry],
+          };
+        }
+        return client;
+      })
+    );
+  };
+
+  const handleAbono = (clientId, amount, paymentType) => {
+    setClients((prevClients) =>
+      prevClients.map((client) => {
+        if (client.id === clientId) {
+          const newBalance = client.balance - amount;
+          const newStatus = newBalance <= 0 ? 'Al día' : 'Pendiente';
+          const paymentRecord = {
+            amount: amount,
+            date: new Date().toISOString(),
+            type: paymentType,
+            by: currentUser.username,
+          };
+
+          setReceiptData({ client: { ...client, balance: newBalance }, payment: paymentRecord });
+          setShowReceipt(true);
+
+          const modificationEntry = {
+            date: new Date().toISOString(),
+            by: currentUser.username,
+            type: `Abono de Saldo (${paymentType})`,
+            details: `Monto: $${amount.toLocaleString('es-CO')}, Saldo anterior: $${client.balance.toLocaleString('es-CO')}, Nuevo saldo: $${newBalance.toLocaleString('es-CO')}`,
+          };
+
+          return {
+            ...client,
+            balance: newBalance,
+            status: newStatus,
+            lastPaymentDate: new Date().toISOString(),
+            payments: [...client.payments, paymentRecord],
+            modifications: [...(client.modifications || []), modificationEntry],
+          };
+        }
+        return client;
+      })
+    );
+  };
+
+  const handleRemovePayment = (clientId, paymentIndex) => {
+    if (window.confirm('¿Estás seguro de que quieres eliminar este pago?')) {
+      setClients(prevClients => prevClients.map(client => {
+        if (client.id === clientId) {
+          const removedPayment = client.payments[paymentIndex];
+          const newPayments = client.payments.filter((_, idx) => idx !== paymentIndex);
+          const newBalance = client.balance + removedPayment.amount;
+          const newStatus = newBalance <= 0 ? 'Al día' : 'Pendiente';
+
+          const modificationEntry = {
+            date: new Date().toISOString(),
+            by: currentUser.username,
+            type: 'Eliminación de Pago',
+            details: `Pago de $${removedPayment.amount.toLocaleString('es-CO')} (${removedPayment.type}) eliminado. Saldo anterior: $${client.balance.toLocaleString('es-CO')}, Nuevo saldo: $${newBalance.toLocaleString('es-CO')}`,
+          };
+
+          return {
+            ...client,
+            payments: newPayments,
+            balance: newBalance,
+            status: newStatus,
+            modifications: [...(client.modifications || []), modificationEntry],
+          };
+        }
+        return client;
+      }));
+      alert('¡Pago eliminado con éxito!');
+    }
+  };
+
+  const handleShowReceipt = (client, payment) => {
+    setReceiptData({ client, payment });
+    setShowReceipt(true);
+  };
+
+  const handleUpdateUser = (updatedUserData) => {
+    const userIndex = users.findIndex(u => u.username === updatedUserData.username);
+    if (userIndex !== -1) {
+      users[userIndex] = updatedUserData;
+    }
+    setCurrentUser(updatedUserData);
+    alert('¡Tu perfil ha sido actualizado!');
+  };
+
+  const handleCreateEmployee = (newEmployeeData) => {
+    const existingUser = users.find(u => u.username === newEmployeeData.username);
+    if (existingUser) {
+      alert('¡Ya existe un usuario con ese correo electrónico!');
+      return;
+    }
+    users.push(newEmployeeData);
+    alert(`¡Empleado ${newEmployeeData.name} creado con éxito!`);
+  };
+
+  const handleUpdateEmployee = (updatedEmployeeData) => {
+    const userIndex = users.findIndex(u => u.username === updatedEmployeeData.username);
+    if (userIndex !== -1) {
+      users[userIndex] = updatedEmployeeData;
+      alert(`¡Empleado ${updatedEmployeeData.name} actualizado con éxito!`);
+    } else {
+      alert('¡Error al actualizar empleado!');
+    }
+  };
+
+  const handleDeleteEmployee = (username) => {
+    const initialLength = users.length;
+    const updatedUsers = users.filter(user => user.username !== username);
+    users.splice(0, users.length, ...updatedUsers);
+    if (users.length < initialLength) {
+      alert(`¡Usuario ${username} eliminado con éxito!`);
+    } else {
+      alert('¡Error al eliminar usuario!');
+    }
+  };
+
+  const handleRegisterAdmin = (newAdminData) => {
+    if (users.filter(u => u.role === 'admin').length >= 3) {
+      alert('¡Ya se ha alcanzado el límite de 3 administradores!');
+      return;
+    }
+    if (users.some(u => u.username === newAdminData.username)) {
+      alert('¡Ya existe un usuario con ese correo electrónico!');
+      return;
+    }
+    users.push(newAdminData);
+    alert(`¡Administrador ${newAdminData.name} creado con éxito!`);
+  };
+
+  const handleUpdatePaymentDays = (newDays) => {
+    localStorage.setItem('paymentDays', JSON.stringify(newDays));
+    alert('¡Días de cobro actualizados y guardados!');
+  };
+
+  const handleExportClientsToCsv = () => {
+    const headers = [
+      "ID", "Tipo de Cliente", "Nombre", "Apellido", "Cédula", "Celular", "Dirección", "Lugar", 
+      "Mensualidad (Identificador)", "Mensualidad (Valor)", "Saldo Actual", "Estado", "Comentario", 
+      "Último Pago (Fecha)", "Historial de Pagos (Fecha - Monto - Tipo - Por)", 
+      "Historial de Modificaciones (Fecha - Por - Tipo - Detalles)", "Días Restantes en el Mes",
+      "MAC", "IP"
+    ];
+    const rows = clients.map(client => {
+      const paymentsHistory = client.payments.map(p => 
+        `${new Date(p.date).toLocaleString('es-CO')} - $${p.amount.toLocaleString('es-CO')} (${p.type}) - Por: ${p.by || 'N/A'}`
+      ).join('; ');
+      
+      const modificationsHistory = client.modifications.map(m =>
+        `${new Date(m.date).toLocaleString('es-CO')} - Por: ${m.by || 'N/A'} (${m.type})${m.details ? ' - ' + m.details : ''}`
+      ).join('; ');
+
+      return [
+        client.id,
+        client.clientType,
+        client.name,
+        client.lastName,
+        client.cedula,
+        client.phone,
+        client.address,
+        client.place,
+        client.monthlyFeeIdentifier,
+        client.monthlyFee,
+        client.balance,
+        client.status,
+        client.comment,
+        client.lastPaymentDate ? new Date(client.lastPaymentDate).toLocaleDateString('es-CO') : '',
+        paymentsHistory,
+        modificationsHistory,
+        client.daysRemainingInMonth || 'N/A',
+        client.mac || '',
+        client.ip || ''
+      ];
+    });
+
+    const escapeCsvValue = (value) => {
+      if (value === null || value === undefined) return '';
+      let stringValue = String(value);
+      if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        return `"${stringValue.replace(/"/g, '""')}"`;
+      }
+      return stringValue;
+    };
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+      + headers.map(escapeCsvValue).join(",") + "\n" 
+      + rows.map(row => row.map(escapeCsvValue).join(",")).join("\n");
+
+    var encodedUri = encodeURI(csvContent);
+    var link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "clientes.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    alert('¡Clientes exportados a clientes.csv!');
+  };
+
+  const handleImportClients = (event) => {
+    const file = event.target.files[0];
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target.result;
+      const lines = text.split('\n').filter(line => line.trim() !== '');
+      if (lines.length <= 1) {
+        alert('¡El archivo CSV está vacío o solo tiene encabezados!');
+        return;
+      }
+      const importedClients = [];
+      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(v => v.trim().replace(/^"|"$/g, '').replace(/""/g, '"'));
+        
+        const newClient = {
+          id: values[headers.indexOf("ID")] || Date.now().toString() + i,
+          clientType: values[headers.indexOf("Tipo de Cliente")] || 'Normal',
+          name: values[headers.indexOf("Nombre")] || '',
+          lastName: values[headers.indexOf("Apellido")] || '',
+          cedula: values[headers.indexOf("Cédula")] || '',
+          phone: values[headers.indexOf("Celular")] || '',
+          address: values[headers.indexOf("Dirección")] || '',
+          place: values[headers.indexOf("Lugar")] || '',
+          monthlyFeeIdentifier: values[headers.indexOf("Mensualidad (Identificador)")] || 'A',
+          monthlyFee: parseFloat(values[headers.indexOf("Mensualidad (Valor)")]) || 0,
+          balance: parseFloat(values[headers.indexOf("Saldo Actual")]) || 0,
+          status: values[headers.indexOf("Estado")] || 'Al día',
+          comment: values[headers.indexOf("Comentario")] || '',
+          lastPaymentDate: values[headers.indexOf("Último Pago (Fecha)")] ? new Date(values[headers.indexOf("Último Pago (Fecha)")]).toISOString() : new Date().toISOString(),
+          payments: [],
+          modifications: [{ date: new Date().toISOString(), by: currentUser.username, type: 'Importación' }],
+          daysRemainingInMonth: parseInt(values[headers.indexOf("Días Restantes en el Mes")]) || 0,
+          mac: values[headers.indexOf("MAC")] || null,
+          ip: values[headers.indexOf("IP")] || null,
+        };
+      }
+      setClients(prevClients => [...prevClients, ...importedClients]);
+      alert(`¡Se importaron ${importedClients.length} clientes nuevos!`);
+      setCurrentPage('list');
+    };
+    reader.readAsText(file);
+  };
+
+  const handleBillClientsMonthly = () => {
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const billingDay = JSON.parse(localStorage.getItem('paymentDays'))?.billingDay || 1;
+
+    if (today.getDate() !== billingDay) {
+      alert(`¡Hoy no es el día de facturación! El día de facturación configurado es el ${billingDay} de cada mes.`);
+      return;
+    }
+
+    let billedCount = 0;
+    const updatedClients = clients.map(client => {
+      const lastPaymentDate = client.lastPaymentDate ? new Date(client.lastPaymentDate) : null;
+      const alreadyBilledThisMonth = lastPaymentDate && 
+                                     lastPaymentDate.getMonth() === currentMonth && 
+                                     lastPaymentDate.getFullYear() === currentYear;
+
+      if (client.balance === 0 && client.monthlyFee > 0 && !alreadyBilledThisMonth) {
+        billedCount++;
+        const newBalance = client.balance + client.monthlyFee;
+        const newStatus = newBalance > 0 ? 'Pendiente' : 'Al día';
+
+        return {
+          ...client,
+          balance: newBalance,
+          status: newStatus,
+          modifications: [
+            ...(client.modifications || []),
+            { date: new Date().toISOString(), by: currentUser.username, type: 'Facturación Mensual' },
+          ],
+        };
+      }
+      return client;
+    });
+    setClients(updatedClients);
+    alert(`¡Se facturaron ${billedCount} clientes mensualmente!`);
+  };
+
+  const handleSendMessage = () => {
+    if (!messageText.trim()) {
+      alert('¡Escribe un mensaje antes de enviar!');
+      return;
+    }
+
+    let recipients = [];
+    if (messageRecipient === 'all') {
+      recipients = clients.map(c => c.phone).filter(Boolean);
+    } else if (messageRecipient === 'pending') {
+      recipients = clients.filter(c => c.balance > 0).map(c => c.phone).filter(Boolean);
+    } else if (messageRecipient === 'alDia') {
+      recipients = clients.filter(c => c.balance <= 0).map(c => c.phone).filter(Boolean);
+    }
+
+    if (recipients.length === 0) {
+      alert('¡No hay clientes para enviar el mensaje con los filtros seleccionados!');
+      return;
+    }
+
+    const confirmSend = window.confirm(`¿Estás seguro de enviar este mensaje a ${recipients.length} clientes?`);
+    if (confirmSend) {
+      recipients.forEach(phone => {
+        const whatsappUrl = `https://wa.me/${phone}?text=${encodeURIComponent(messageText)}`;
+        window.open(whatsappUrl, '_blank');
+      });
+      alert('¡Mensajes enviados (se abrieron nuevas pestañas de WhatsApp)!');
+      setMessageText('');
+    }
+  };
+
+  const renderPage = () => {
+    if (currentPage === 'welcome') {
+      return <WelcomeScreen onEnter={handleWelcomeEnter} />;
+    }
+
+    if (currentPage === 'publicQuery') {
+      return <PublicQuery clients={clients} onNavigateToLogin={() => setCurrentPage('login')} />;
+    }
+
+    if (!isLoggedIn) {
+      return <LoginForm onLogin={handleLogin} />;
+    }
+
+    const existingClientCedulas = clients.map(client => client.cedula);
+
+    if (currentPage === 'list') {
+      return (
+        <ClientList
+          clients={clients}
+          onPay={handlePay}
+          onAbono={handleAbono}
+          onEdit={currentUser && currentUser.role === 'admin' ? handleEditClient : null}
+          onUpdateBalance={currentUser && currentUser.role === 'admin' ? handleUpdateBalance : null}
+          onDelete={currentUser && currentUser.role === 'admin' ? handleDeleteClient : null}
+          onRemovePayment={currentUser && currentUser.role === 'admin' ? handleRemovePayment : null}
+          onShowReceipt={handleShowReceipt}
+          userRole={currentUser ? currentUser.role : null}
+        />
+      );
+    } else if (currentPage === 'add') {
+      if (currentUser && currentUser.role === 'admin') {
+        return <ClientForm onAddClient={handleAddClient} onUpdateClient={handleUpdateClient} editingClient={editingClient} existingClientCedulas={existingClientCedulas} currentUser={currentUser} clientCount={clients.length} />;
+      } else {
+        return <p className="text-center text-red-500 text-xl mt-8">¡Acceso denegado! Solo los administradores pueden agregar o modificar clientes.</p>;
+      }
+    } else if (currentPage === 'delete') {
+      if (currentUser && currentUser.role === 'admin') {
+        return (
+          <div className="p-6">
+            <h2 className="text-2xl font-bold mb-4 text-gray-800">Eliminar Clientes</h2>
+            <p className="mb-4 text-gray-600">Selecciona un cliente de la lista para eliminarlo permanentemente.</p>
+            <ClientList
+              clients={clients}
+              onPay={() => {}}
+              onAbono={() => {}}
+              onEdit={null}
+              onUpdateBalance={null}
+              onDelete={handleDeleteClient}
+              userRole={currentUser ? currentUser.role : null}
+            />
+            <button
+              onClick={handleDeleteAllClients}
+              className="w-full mt-6 bg-red-700 text-white py-2 rounded-lg hover:bg-red-800 transition-colors font-semibold"
+            >
+              Eliminar TODOS los Clientes
+            </button>
+          </div>
+        );
+      } else {
+        return <p className="text-center text-red-500 text-xl mt-8">¡Acceso denegado! Solo los administradores pueden eliminar clientes.</p>;
+      }
+    } else if (currentPage === 'settings') {
+      if (currentUser && currentUser.role === 'admin') {
+        return <SettingsPage currentUser={currentUser} onUpdateUser={handleUpdateUser} onCreateEmployee={handleCreateEmployee} onUpdateEmployee={handleUpdateEmployee} onDeleteEmployee={handleDeleteEmployee} onRegisterAdmin={handleRegisterAdmin} onUpdatePaymentDays={handleUpdatePaymentDays} />;
+      } else {
+        return <p className="text-center text-red-500 text-xl mt-8">¡Acceso denegado! Solo los administradores pueden acceder a los ajustes.</p>;
+      }
+    } else if (currentPage === 'excel') {
+      if (currentUser && currentUser.role === 'admin') {
+        return (
+          <div className="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
+            <h2 className="text-2xl font-bold mb-4 text-center">Exportar/Importar Clientes</h2>
+            <p className="mb-4 text-gray-600 text-center">Maneja tus datos de clientes con archivos CSV.</p>
+            <button
+              onClick={handleExportClientsToCsv}
+              className="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors mb-4"
+            >
+              Exportar Clientes a CSV
+            </button>
+            <label htmlFor="import-csv" className="block text-center bg-blue-600 text-white py-2 rounded-lg cursor-pointer hover:bg-blue-700 transition-colors">
+              Importar Clientes desde CSV
+              <input
+                type="file"
+                id="import-csv"
+                accept=".csv"
+                onChange={handleImportClients}
+                className="hidden"
+              />
+            </label>
+            <p className="text-sm text-gray-500 text-center mt-2">Asegúrate de que el archivo CSV tenga el formato correcto.</p>
+          </div>
+        );
+      } else {
+        return <p className="text-center text-red-500 text-xl mt-8">¡Acceso denegado! Solo los administradores pueden exportar/importar datos.</p>;
+      }
+    } else if (currentPage === 'bill') {
+      if (currentUser && currentUser.role === 'admin') {
+        return (
+          <div className="p-6 bg-white rounded-lg shadow-md max-w-md mx-auto">
+            <h2 className="text-2xl font-bold mb-4 text-center">Facturación Mensual</h2>
+            <p className="mb-4 text-gray-600 text-center">
+              Haz clic para facturar la mensualidad a todos los clientes que no tengan saldo pendiente o que no hayan sido facturados este mes.
+            </p>
+            <button
+              onClick={handleBillClientsMonthly}
+              className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+            >
+              Facturar Mensualidad a Clientes
+            </button>
+            <div className="mt-6 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-2">Información de Facturación:</h3>
+              <p className="text-gray-700">Día de Facturación Configurado: <span className="font-semibold">{JSON.parse(localStorage.getItem('paymentDays'))?.billingDay || 1}</span> de cada mes.</p>
+              <p className="text-gray-700">Clientes con Saldo Pendiente: <span className="font-semibold">{clients.filter(c => c.balance > 0).length}</span></p>
+              <p className="text-gray-700">Clientes con Saldo a Favor: <span className="font-semibold">{clients.filter(c => c.balance < 0).length}</span></p>
+              <p className="text-gray-700">Clientes al Día (Saldo 0): <span className="font-semibold">{clients.filter(c => c.balance === 0).length}</span></p>
+            </div>
+
+            {/* Sección de Envío de Mensajes */}
+            <div className="mt-8 border-t pt-4">
+              <h3 className="text-lg font-semibold mb-2">Enviar Mensaje a Clientes (WhatsApp)</h3>
+              <textarea
+                placeholder="Escribe tu mensaje aquí..."
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                rows="4"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition resize-none mb-3"
+              ></textarea>
+              <select
+                value={messageRecipient}
+                onChange={(e) => setMessageRecipient(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-black transition mb-3"
+              >
+                <option value="all">Todos los Clientes</option>
+                <option value="pending">Clientes con Saldo Pendiente</option>
+                <option value="alDia">Clientes al Día (Saldo 0 o a Favor)</option>
+              </select>
+              <button
+                onClick={handleSendMessage}
+                className="w-full bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 transition-colors font-semibold"
+              >
+                Enviar Mensaje por WhatsApp
+              </button>
+            </div>
+          </div>
+        );
+      } else {
+        return <p className="text-center text-red-500 text-xl mt-8">¡Acceso denegado! Solo los administradores pueden facturar clientes.</p>;
+      }
+    } else if (currentPage === 'assignEquipment') {
+      if (currentUser && currentUser.role === 'admin') {
+        return <AssignEquipment clients={clients} onAssignEquipment={handleAssignEquipment} onModifyEquipment={handleModifyEquipment} onNavigateBack={() => setCurrentPage('list')} />;
+      } else {
+        return <p className="text-center text-red-500 text-xl mt-8">¡Acceso denegado! Solo los administradores pueden asignar equipos.</p>;
+      }
+    }
+    return null;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100">
+      {isLoggedIn && <LayoutHeader currentPage={currentPage} onNavigate={setCurrentPage} userRole={currentUser ? currentUser.role : null} onLogout={handleLogout} />}
+      <main className="container mx-auto py-8">
+        {renderPage()}
+        {showReceipt && receiptData && (
+          <PaymentReceipt
+            client={receiptData.client}
+            payment={receiptData.payment}
+            onClose={() => setShowReceipt(false)}
+          />
+        )}
+      </main>
+    </div>
+  );
+};
+
+// /components/ClientCard.js
+const ClientCard = ({ client, onPay, onAbono, onEdit, onUpdateBalance, onDelete, onRemovePayment, onShowReceipt }) => {
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [editingBalance, setEditingBalance] = useState(false);
+  const [newBalanceValue, setNewBalanceValue] = useState(client.balance);
+  const [showPaymentsHistory, setShowPaymentsHistory] = useState(false);
+  const [showModificationsHistory, setShowModificationsHistory] = useState(false);
+  const [showPaymentOptions, setShowPaymentOptions] = useState(false);
+
+  const handlePay = (paymentType) => {
+    if (paymentAmount > 0) {
+      onAbono(client.id, parseFloat(paymentAmount), paymentType);
+      setPaymentAmount('');
+    } else {
+      onPay(client.id, client.monthlyFee, paymentType);
+    }
+    setShowPaymentOptions(false);
+  };
+
+  const handleBalanceClick = () => {
+    setEditingBalance(true);
+    setNewBalanceValue(client.balance);
+  };
+
+  const handleBalanceChange = (e) => {
+    setNewBalanceValue(parseFloat(e.target.value) || 0);
+  };
+
+  const handleBalanceSave = () => {
+    onUpdateBalance(client.id, newBalanceValue);
+    setEditingBalance(false);
+  };
+
+  const handleBalanceCancel = () => {
+    setEditingBalance(false);
+    setNewBalanceValue(client.balance);
+  };
+
+  const displayMonthlyFee = typeof client.monthlyFee === 'number' ? client.monthlyFee.toLocaleString('es-CO') : 'N/A';
+  const displayBalance = typeof client.balance === 'number' ? client.balance.toLocaleString('es-CO') : 'N/A';
+
+  const statusColor = client.balance === 0 ? 'text-green-500' :
+                      client.balance > 0 ? 'text-red-500' :
+                      'text-blue-500';
+
+  const isSuspended = client.status === 'Suspendido';
+
+  const today = new Date();
+  const lastPayment = client.lastPaymentDate ? new Date(client.lastPaymentDate) : null;
+  const nextPaymentDueDay = 5;
+  const suspensionDay = 10;
+
+  let showSuspensionWarning = false;
+  if (client.balance > 0 && lastPayment) {
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const lastPaymentMonth = lastPayment.getMonth();
+    const lastPaymentYear = lastPayment.getFullYear();
+
+    if (lastPaymentYear < currentYear || (lastPaymentYear === currentYear && lastPaymentMonth < currentMonth) || (lastPaymentYear === currentYear && lastPaymentMonth === currentMonth && today.getDate() > nextPaymentDueDay)) {
+      if (today.getDate() >= suspensionDay) {
+        showSuspensionWarning = true;
+      }
+    }
+  }
+
+  return (
+    <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-200">
+      <div className="flex justify-between items-start mb-4">
+        <h3 className="text-2xl font-bold text-gray-800">{client.name} {client.lastName}</h3>
+        <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
+          client.status === 'Al día' ? 'bg-green-100 text-green-800' :
+          client.status === 'Pendiente' ? 'bg-red-100 text-red-800' :
+          'bg-yellow-100 text-yellow-800'
+        }`}>
+          {client.status}
+        </span>
+      </div>
+
+      <div className="space-y-2 text-gray-700 text-sm">
+        <p><span className="font-semibold">Tipo de Cliente:</span> {client.clientType}</p>
+        <p><span className="font-semibold">Cédula:</span> {client.cedula}</p>
+        <p><span className="font-semibold">Celular:</span> {client.phone}</p>
+        <p><span className="font-semibold">Dirección:</span> {client.address}</p>
+        <p><span className="font-semibold">Lugar:</span> {client.place}</p>
+        <p><span className="font-semibold">Mensualidad:</span> ${displayMonthlyFee}</p>
+        {client.comment && <p><span className="font-semibold">Comentario:</span> {client.comment}</p>}
+        {client.mac && <p><span className="font-semibold">MAC:</span> {client.mac}</p>}
+        {client.ip && <p><span className="font-semibold">IP:</span> {client.ip}</p>}
+        {client.daysRemainingInMonth !== undefined && <p><span className="font-semibold">Días Restantes:</span> {client.daysRemainingInMonth}</p>}
+      </div>
+      
+      <div className="flex items-center mt-4">
+        <p className={`text-xl font-bold ${statusColor}`}>
+          Saldo:
+        </p>
+        {editingBalance ? (
+          <div className="flex items-center ml-2">
+            <input
+              type="number"
+              value={newBalanceValue}
+              onChange={handleBalanceChange}
+              className="w-32 px-2 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-black"
+            />
+            <button
+              onClick={handleBalanceSave}
+              className="ml-2 bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition-colors"
+            >
+              Guardar
+            </button>
+            <button
+              onClick={handleBalanceCancel}
+              className="ml-2 bg-gray-400 text-white px-3 py-1 rounded-md hover:bg-gray-500 transition-colors"
+            >
+              Cancelar
+            </button>
+          </div>
+        ) : (
+          <span
+            className={`text-xl font-bold ml-2 cursor-pointer hover:underline ${statusColor}`}
+            onClick={onUpdateBalance ? handleBalanceClick : null}
+          >
+            ${displayBalance}
+          </span>
+        )}
+      </div>
+
+      {showSuspensionWarning && (
+        <div className="mt-4 p-3 bg-red-100 text-red-800 rounded-lg text-sm font-medium border border-red-200">
+          ¡AVISO! Cliente con pago pendiente. ¡Suspender si no paga antes del día {suspensionDay}!
+        </div>
+      )}
+      {isSuspended && (
+        <div className="mt-4 p-3 bg-yellow-100 text-yellow-800 rounded-lg text-sm font-medium border border-yellow-200">
+          ¡AVISO! Cliente suspendido por falta de pago.
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-col space-y-2">
+        <div className="flex items-center space-x-2">
+          <input
+            type="number"
+            placeholder="Monto de abono"
+            value={paymentAmount}
+            onChange={(e) => setPaymentAmount(e.target.value)}
+            className="flex-grow px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black transition"
+          />
+          <button
+            onClick={() => setShowPaymentOptions(!showPaymentOptions)}
+            className="bg-black text-white px-5 py-2 rounded-lg hover:bg-gray-800 transition-colors font-semibold"
+          >
+            {paymentAmount > 0 ? 'Abonar' : 'Pagar Mes'}
+          </button>
+        </div>
+
+        {showPaymentOptions && (
+          <div className="flex space-x-2 mt-2">
+            <button
+              onClick={() => handlePay('Efectivo')}
+              className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors font-semibold"
+            >
+              Pago en Efectivo
+            </button>
+            <button
+              onClick={() => handlePay('Transferencia')}
+              className="flex-1 bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-semibold"
+            >
+              Pago por Transferencia
+            </button>
+          </div>
+        )}
+
+        {onEdit && (
+          <button
+            onClick={() => onEdit(client)}
+            className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+          >
+            Modificar Cliente
+          </button>
+        )}
+        {onDelete && (
+          <button
+            onClick={() => onDelete(client.id)}
+            className="w-full bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition-colors font-semibold"
+          >
+            Eliminar Cliente
+          </button>
+        )}
+      </div>
+
+      <div className="mt-6 flex justify-around space-x-2">
+        {client.payments.length > 0 && (
+          <button
+            onClick={() => setShowPaymentsHistory(!showPaymentsHistory)}
+            className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-semibold"
+          >
+            {showPaymentsHistory ? 'Ocultar Historial de Pagos' : 'Ver Historial de Pagos'}
+          </button>
+        )}
+        {client.modifications && client.modifications.length > 0 && (
+          <button
+            onClick={() => setShowModificationsHistory(!showModificationsHistory)}
+            className="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg hover:bg-gray-300 transition-colors text-sm font-semibold"
+          >
+            {showModificationsHistory ? 'Ocultar Historial de Mods.' : 'Ver Historial de Mods.'}
+          </button>
+        )}
+      </div>
+
+      {showPaymentsHistory && client.payments.length > 0 && (
+        <div className="mt-4 border-t border-gray-200 pt-4">
+          <h4 className="text-md font-semibold mb-2 text-gray-800">Historial de Pagos:</h4>
+          <ul className="space-y-1 text-sm text-gray-600">
+            {client.payments.map((payment, index) => (
+              <li key={index} className="bg-gray-50 p-2 rounded-md flex justify-between items-center">
+                <div>
+                  {new Date(payment.date).toLocaleString()} - <span className="font-medium">${payment.amount.toLocaleString('es-CO')}</span> ({payment.type}) - Realizado por: <span className="font-medium">{payment.by}</span>
+                </div>
+                <div className="flex space-x-2">
+                  {onShowReceipt && (
+                    <button
+                      onClick={() => onShowReceipt(client, payment)}
+                      className="bg-blue-500 text-white px-2 py-1 rounded-md hover:bg-blue-600 transition-colors text-xs"
+                    >
+                      Ver Recibo
+                    </button>
+                  )}
+                  {onRemovePayment && (
+                    <button
+                      onClick={() => onRemovePayment(client.id, index)}
+                      className="bg-red-500 text-white px-2 py-1 rounded-md hover:bg-red-600 transition-colors text-xs"
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {showModificationsHistory && client.modifications && client.modifications.length > 0 && (
+        <div className="mt-4 border-t border-gray-200 pt-4">
+          <h4 className="text-md font-semibold mb-2 text-gray-800">Historial de Modificaciones:</h4>
+          <ul className="space-y-1 text-sm text-gray-600">
+            {client.modifications.map((mod, index) => (
+              <li key={index} className="bg-gray-50 p-2 rounded-md">
+                {new Date(mod.date).toLocaleString()} - Modificado por: <span className="font-medium">{mod.by}</span> ({mod.type})
+                {mod.details && <p className="text-xs text-gray-500 mt-1">Detalles: {mod.details}</p>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// /components/PaymentReceipt.js
+const PaymentReceipt = ({ client, payment, onClose }) => {
+  const receiptRef = useRef();
+
+  if (!client || !payment) return null;
+
+  const serviceName = "Servicio de Internet";
+
+  const handlePrint = () => {
+    const printContent = receiptRef.current.innerHTML;
+    const originalContent = document.body.innerHTML;
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.open();
+    printWindow.document.write(`
+      <html>
+      <head>
+        <title>Recibo de Pago</title>
+        <style>
+          body { font-family: sans-serif; margin: 20px; }
+          .receipt-container { border: 1px solid #ccc; padding: 20px; border-radius: 8px; max-width: 400px; margin: 0 auto; }
+          h2 { text-align: center; color: #333; margin-bottom: 20px; }
+          .info-section { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+          .info-section p { margin: 5px 0; color: #555; font-size: 14px; }
+          .info-section span { font-weight: bold; color: #333; }
+          .amount-section { border-top: 1px solid #eee; padding-top: 10px; margin-top: 10px; }
+          .amount-row { display: flex; justify-content: space-between; margin-bottom: 5px; }
+          .amount-row p { font-size: 16px; color: #333; }
+          .amount-row .value { font-size: 20px; font-weight: bold; }
+          .green-text { color: #22c55e; }
+          .red-text { color: #ef4444; }
+          .blue-text { color: #3b82f6; }
+          .thank-you { text-align: center; margin-top: 20px; color: #777; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="receipt-container">
+          ${printContent}
+        </div>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+    printWindow.close();
+    onClose();
+  };
+
+  const handleShare = async () => {
+    // Generar un texto conciso para compartir con toda la información relevante
+    const shareText = `¡Hola! Aquí está tu recibo de pago.\n\n` +
+                      `Cliente: ${client.name} ${client.lastName}\n` +
+                      `Cédula: ${client.cedula}\n` +
+                      `Celular: ${client.phone}\n` +
+                      `Dirección: ${client.address}\n` +
+                      `Lugar: ${client.place}\n` +
+                      `Servicio: ${serviceName}\n` +
+                      `Mensualidad: $${client.monthlyFee.toLocaleString('es-CO')}\n` +
+                      `Monto Pagado: $${payment.amount.toLocaleString('es-CO')}\n` +
+                      `Forma de Pago: ${payment.type}\n` +
+                      `Realizado por: ${payment.by}\n` +
+                      `Saldo Actual: ${client.balance < 0 ? 'A favor $' + Math.abs(client.balance).toLocaleString('es-CO') : 'Pendiente $' + client.balance.toLocaleString('es-CO')}\n` +
+                      `Estado del Cliente: ${client.status}\n` +
+                      `Fecha del Pago: ${new Date(payment.date).toLocaleString('es-CO')}\n\n` +
+                      `Tipo de Cliente: ${client.clientType}\n` + // Agregado
+                      `MAC: ${client.mac || 'N/A'}\n` + // Agregado
+                      `IP: ${client.ip || 'N/A'}\n` + // Agregado
+                      `Días Restantes en el Mes: ${client.daysRemainingInMonth || 'N/A'}\n` + // Agregado
+                      `¡Gracias por tu pago!`;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Recibo de Pago',
+          text: shareText,
+        });
+        alert('¡Recibo compartido con éxito!');
+      } catch (error) {
+        console.error('Error al compartir:', error);
+        alert('¡No se pudo compartir el recibo! Intenta de nuevo.');
+      }
+    } else {
+      navigator.clipboard.writeText(shareText).then(() => {
+        alert('¡Recibo copiado al portapapeles! Puedes pegarlo donde quieras.');
+      }).catch(err => {
+        console.error('Error al copiar al portapapeles:', err);
+        alert('Tu navegador no soporta la función de compartir ni copiar al portapapeles. Copia la información manualmente.');
+      });
+    }
+  };
+
+  const isBalancePositive = client.balance < 0;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full relative">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 bg-gray-200 text-gray-700 rounded-full p-2 hover:bg-gray-300 transition-colors"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+          </svg>
+        </button>
+
+        <div ref={receiptRef} className="p-2">
+          <h2 className="text-3xl font-bold text-center text-gray-800 mb-6">Recibo de Pago</h2>
+          
+          <div className="border-b border-gray-200 pb-4 mb-4">
+            <p className="text-gray-600 text-sm">Fecha y Hora: <span className="font-semibold text-gray-800">{new Date(payment.date).toLocaleString('es-CO')}</span></p>
+            <p className="text-gray-600 text-sm">Forma de Pago: <span className="font-semibold text-gray-800">{payment.type}</span></p>
+            <p className="text-gray-600 text-sm">Realizado por: <span className="font-semibold text-gray-800">{payment.by}</span></p>
+          </div>
+
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">Información del Cliente:</h3>
+            <p className="text-gray-700"><span className="font-medium">Nombre:</span> {client.name} {client.lastName}</p>
+            <p className="text-gray-700"><span className="font-medium">Cédula:</span> {client.cedula}</p>
+            <p className="text-gray-700"><span className="font-medium">Celular:</span> {client.phone}</p>
+            <p className="text-gray-700"><span className="font-medium">Servicio:</span> {serviceName}</p>
+          </div>
+
+          <div className="border-t border-gray-200 pt-4 mt-4">
+            <div className="flex justify-between items-center mb-2">
+              <p className="text-lg font-semibold text-gray-800">Monto Pagado:</p>
+              <p className="text-2xl font-bold text-green-600">${payment.amount.toLocaleString('es-CO')}</p>
+            </div>
+            
+            {isBalancePositive ? (
+              <div className="flex justify-between items-center">
+                <p className="text-md font-semibold text-gray-800">Saldo a Favor:</p>
+                <p className="text-xl font-bold text-blue-600">${Math.abs(client.balance).toLocaleString('es-CO')}</p>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <p className="text-md font-semibold text-gray-800">Saldo Pendiente:</p>
+                <p className="text-xl font-bold text-red-600">${client.balance.toLocaleString('es-CO')}</p>
+              </div>
+            )}
+          </div>
+
+          <p className="text-center text-gray-500 text-sm mt-6">¡Gracias por tu pago!</p>
+        </div>
+
+        <div className="flex justify-around mt-6 space-x-4">
+          <button
+            onClick={handlePrint}
+            className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+          >
+            Imprimir
+          </button>
+          <button
+            onClick={handleShare}
+            className="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors font-semibold"
+          >
+            Compartir
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+      const root = createRoot(document.getElementById("root"));
+            root.render(
+              <StrictMode>
+                <App />
+              </StrictMode>
+            );
+</script>
+        </body>
+      </html>
